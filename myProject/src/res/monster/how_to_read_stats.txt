@@ -1,0 +1,7 @@
+0 - speed
+1 - collisionArea.x
+2 - collisionArea.y
+3 - collisionArea.width
+4 - collisionArea.height
+5 - maxHp
+6 - attack
