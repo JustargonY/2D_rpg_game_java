@@ -8,6 +8,7 @@ import terrain.TileManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 public class GamePanel extends JPanel implements Runnable{
@@ -19,7 +20,8 @@ public class GamePanel extends JPanel implements Runnable{
         TITLE_SCREEN,
         DIALOG,
         INVENTORY,
-        SETTINGS
+        SETTINGS,
+        GAME_OVER
     }
 
     // Tile parameters
@@ -28,8 +30,8 @@ public class GamePanel extends JPanel implements Runnable{
     public final int tileSize = originalTileSize * scale;
 
     // Screen parameters
-    public final int maxScreenCol = 16;
-    public final int maxScreenRow = 10;
+    public final int maxScreenCol = 21;
+    public final int maxScreenRow = 12;
 
     // Screen parameters
     public final int screenWidth = maxScreenCol * tileSize;
@@ -40,6 +42,13 @@ public class GamePanel extends JPanel implements Runnable{
     public final int maxWorldRow = 50;
     public final int worldWidth = maxWorldCol * tileSize;
     public final int worldHeight = maxWorldRow * tileSize;
+
+    // Full Screen parameters
+    public int fullScreenWidth = screenWidth;
+    public int fullScreenHeight= screenHeight;
+    BufferedImage tmpScreen;
+    Graphics2D g2;
+    public boolean isFullScreen;
 
     // Game options
     final int FPS = 60;
@@ -79,8 +88,34 @@ public class GamePanel extends JPanel implements Runnable{
         gameState = GameState.TITLE_SCREEN;
         objSetter.setNPCList();
         objSetter.setMonsterList();
-        objSetter.setEntityList();
         playTrack(1);
+
+        tmpScreen = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
+        g2 = (Graphics2D) tmpScreen.getGraphics();
+
+        setFullScreen();
+    }
+
+    public void setFullScreen() {
+
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice gd = ge.getDefaultScreenDevice();
+        gd.setFullScreenWindow(Main.window);
+        fullScreenWidth = Main.window.getWidth();
+        fullScreenHeight = Main.window.getHeight();
+        isFullScreen = true;
+
+    }
+
+    public void setDefaultScreen() {
+
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice gd = ge.getDefaultScreenDevice();
+        gd.setFullScreenWindow(null);
+        fullScreenWidth = screenWidth;
+        fullScreenHeight = screenHeight;
+        isFullScreen = false;
+
     }
 
     public void startGameThread() {
@@ -104,7 +139,8 @@ public class GamePanel extends JPanel implements Runnable{
 
             if(delta >= 1) {
                 update();
-                repaint();
+                drawToTempScreen();
+                drawToScreen();
                 delta -= 1;
             }
 
@@ -115,11 +151,11 @@ public class GamePanel extends JPanel implements Runnable{
     public void update() {
 
         switch (gameState){
-            case GAME -> {
+            case GAME, INVENTORY, GAME_OVER -> {
                 player.update();
                 NPCList.forEach(NPC::update);
-                monsterList.removeIf(monster -> monster.curHP == 0);
-                entityList.removeIf(entity -> entity.curHP == 0);
+                monsterList.removeIf(monster -> monster.curHP == 0 && !monster.dying);
+                entityList.removeIf(entity -> entity.curHP == 0 && !entity.dying);
                 monsterList.forEach(Monster::update);
             }
             case MAIN_MENU -> {}
@@ -127,13 +163,12 @@ public class GamePanel extends JPanel implements Runnable{
 
     }
 
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
+    public void drawToTempScreen() {
 
-        Graphics2D g2 = (Graphics2D) g;
+        g2 = (Graphics2D) tmpScreen.getGraphics();
 
         switch (gameState){
-            case GAME, PAUSE, DIALOG -> {
+            case GAME, PAUSE, DIALOG, INVENTORY, GAME_OVER -> {
                 tileManager.draw(g2);
                 NPCList.forEach(npc -> npc.draw(g2));
                 monsterList.forEach(monster -> monster.draw(g2));
@@ -141,7 +176,7 @@ public class GamePanel extends JPanel implements Runnable{
                 ui.draw(g2);
                 g2.dispose();
             }
-            case MAIN_MENU -> {
+            case MAIN_MENU, SETTINGS -> {
                 tileManager.draw(g2);
                 NPCList.forEach(npc -> npc.draw(g2));
                 monsterList.forEach(monster -> monster.draw(g2));
@@ -153,6 +188,14 @@ public class GamePanel extends JPanel implements Runnable{
                 g2.dispose();
             }
         }
+
+    }
+
+    public void drawToScreen() {
+
+        Graphics g = getGraphics();
+        g.drawImage(tmpScreen, 0, 0, fullScreenWidth, fullScreenHeight, null);
+        g.dispose();
 
     }
 
@@ -169,5 +212,27 @@ public class GamePanel extends JPanel implements Runnable{
     public void playSoundEffect(int i) {
         sound.load(i);
         sound.play();
+    }
+
+    public void gameOver() {
+
+        gameState = GameState.GAME_OVER;
+        keyL.pressedRight = false;
+        keyL.pressedLeft = false;
+        keyL.pressedDown = false;
+        keyL.pressedUp = false;
+
+    }
+
+    public void reset() {
+
+        player = new Player(this, keyL);
+        NPCList.clear();
+        monsterList.clear();
+        entityList.clear();
+
+        objSetter.setMonsterList();
+        objSetter.setNPCList();
+
     }
 }

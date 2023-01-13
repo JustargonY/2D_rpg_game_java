@@ -8,12 +8,17 @@ public class Sound {
 
     Clip clip;
     ArrayList<URL> soundURL = new ArrayList<>();
-    // public int playingTrackIndex;
 
     public Sound() {
 
         loadSoundEffect("Bonetrousle");
         loadSoundEffect("test");
+        loadSoundEffect("sword_strike");
+        loadSoundEffect("dead");
+        loadSoundEffect("dead1");
+        loadSoundEffect("hitHurt");
+        loadSoundEffect("MountainSong");
+        loadSoundEffect("asylum");
 
     }
 

@@ -22,6 +22,14 @@ public class KeyL implements KeyListener {
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
 
+        if (code == KeyEvent.VK_BACK_SPACE) {
+            if (gp.isFullScreen) {
+                gp.setDefaultScreen();
+            } else {
+                gp.setFullScreen();
+            }
+        }
+
         switch (gp.gameState){
 
             case GAME -> {
@@ -69,7 +77,9 @@ public class KeyL implements KeyListener {
 
                 }
 
-
+                if (code == KeyEvent.VK_C){
+                    gp.gameState = GamePanel.GameState.INVENTORY;
+                }
 
             }
 
@@ -144,6 +154,60 @@ public class KeyL implements KeyListener {
 
             }
 
+            case GAME_OVER -> {
+
+                if (code == KeyEvent.VK_ENTER){
+                    gp.ui.gameOverAction();
+                }
+
+                if (code == KeyEvent.VK_W){
+                    gp.ui.menuIndex --;
+                    if (gp.ui.menuIndex < 0){
+                        gp.ui.menuIndex = 2;
+                    }
+                }
+
+                if (code == KeyEvent.VK_S){
+                    gp.ui.menuIndex ++;
+                    if (gp.ui.menuIndex > 2){
+                        gp.ui.menuIndex = 0;
+                    }
+                }
+
+            }
+
+            case SETTINGS -> {
+
+                if (code == KeyEvent.VK_ESCAPE){
+                    gp.gameState = GamePanel.GameState.MAIN_MENU;
+                }
+
+            }
+
+            case INVENTORY -> {
+
+                if (code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_C) {
+                    gp.gameState = GamePanel.GameState.GAME;
+                }
+
+                if (code == KeyEvent.VK_W){
+                    pressedUp = true;
+                }
+
+                if (code == KeyEvent.VK_S){
+                    pressedDown = true;
+                }
+
+                if (code == KeyEvent.VK_A){
+                    pressedLeft = true;
+                }
+
+                if (code == KeyEvent.VK_D){
+                    pressedRight = true;
+                }
+
+            }
+
         }
 
 
@@ -155,7 +219,7 @@ public class KeyL implements KeyListener {
 
         switch (gp.gameState){
 
-            case GAME -> {
+            case GAME, INVENTORY -> {
 
                 if (code == KeyEvent.VK_W){
                     pressedUp = false;
