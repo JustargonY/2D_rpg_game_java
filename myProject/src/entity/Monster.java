@@ -3,7 +3,6 @@ package entity;
 import main.GamePanel;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,6 +14,8 @@ public class Monster extends Entity {
 
     // Stat parameters
     int attack;
+    int exp;
+    int gold;
 
     // Move parameters
     int actionLock;
@@ -33,6 +34,7 @@ public class Monster extends Entity {
         loadStats();
 
         actionLock = 0;
+        dying = false;
 
     }
 
@@ -63,6 +65,8 @@ public class Monster extends Entity {
         maxHP = Integer.parseInt(stats[5]);
         curHP = maxHP;
         attack = Integer.parseInt(stats[6]);
+        exp = Integer.parseInt(stats[7]);
+        gold = Integer.parseInt(stats[8]);
 
     }
 
@@ -82,6 +86,13 @@ public class Monster extends Entity {
     @Override
     public void draw(Graphics2D g) {
 
+        super.draw(g);
+        drawHealthBar(g);
+
+    }
+
+    private void drawHealthBar(Graphics2D g) {
+
         boolean IS_ON_THE_SCREEN = worldX > gp.player.worldX - gp.player.screenX - gp.tileSize &&
                 worldX < gp.player.worldX + gp.player.screenX + gp.tileSize &&
                 worldY > gp.player.worldY - gp.player.screenY - gp.tileSize &&
@@ -91,10 +102,6 @@ public class Monster extends Entity {
 
             int x = worldX - gp.player.worldX + gp.player.screenX;
             int y = worldY - gp.player.worldY + gp.player.screenY;
-
-            BufferedImage image = getImage();
-            g.drawImage(image, x, y, gp.tileSize, gp.tileSize, null);
-
 
             g.setColor(Color.RED);
             g.setStroke(new BasicStroke(2));
@@ -107,6 +114,7 @@ public class Monster extends Entity {
             g.setColor(Color.RED);
             g.drawRoundRect(x, y - 9, (int)(48 * k), 9, 2, 2);
             g.fillRoundRect(x, y - 9, (int)(48 * k), 9, 2, 2);
+
         }
 
     }
@@ -194,7 +202,9 @@ public class Monster extends Entity {
         collisionOn = false;
         collisionCheck();
         entityCollisionCheck(gp.entityList);
-        playerCollisionCheck();
+        if (!gp.player.dead) {
+            playerCollisionCheck();
+        }
 
         if (!collisionOn) {
 
@@ -216,6 +226,7 @@ public class Monster extends Entity {
         if (value >= curHP) {
 
             curHP = 0;
+            dying = true;
 
         } else {
 

@@ -29,6 +29,8 @@ public abstract class Entity {
     public int spriteCounter = 0;
     public BufferedImage up1, up2, down1, down2, left1, left2, right1, right2;
     public BufferedImage attackUp1, attackUp2, attackDown1, attackDown2, attackLeft1, attackLeft2, attackRight1, attackRight2;
+    public boolean dying;
+    int dyingFrame;
 
     // Collision parameters
     public Rectangle collisionArea;
@@ -85,6 +87,28 @@ public abstract class Entity {
         return image;
     }
 
+    private void dyingAnimation(Graphics2D g) {
+
+        dyingFrame++;
+
+        if (dyingFrame > 30) {
+            dying = false;
+            if (this instanceof Monster) {
+
+                gp.player.increaseExp(((Monster) this).exp);
+                gp.player.gold += ((Monster) this).gold;
+
+            }
+        }
+        else if ((dyingFrame / 10) % 2 == 0) {
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0F));
+            gp.playSoundEffect(4);
+        } else {
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1F));
+        }
+
+    }
+
     public void draw(Graphics2D g) {
 
         boolean IS_ON_THE_SCREEN = worldX > gp.player.worldX - gp.player.screenX - gp.tileSize &&
@@ -98,7 +122,13 @@ public abstract class Entity {
             int y = worldY - gp.player.worldY + gp.player.screenY;
 
             BufferedImage image = getImage();
+
+            if (dying){
+                dyingAnimation(g);
+            }
+
             g.drawImage(image, x, y, gp.tileSize, gp.tileSize, null);
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1F));
 
         }
 
@@ -290,12 +320,10 @@ public abstract class Entity {
             npc.collisionArea.x = defaultEntityX;
             npc.collisionArea.y = defaultEntityY;
 
-
         }
 
         return npcNear;
 
     }
-
 
 }

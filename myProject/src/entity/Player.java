@@ -2,6 +2,7 @@ package entity;
 
 import main.GamePanel;
 import main.KeyL;
+import objects.Weapon;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -11,7 +12,23 @@ public class Player extends Entity{
     // Stat parameters
     public int exp;
     public int neededExp;
+    public int lvl;
+
+    public int maxMP;
+    public int curMP;
     public int attack;
+    public int strength;
+    public int vitality;
+    public int defence;
+    public int spellPower;
+    public int sorcery;
+
+    public int skillPoints;
+
+    public int gold;
+    public Weapon weapon;
+
+    // Attack system
     boolean attacking;
     boolean attacked;
 
@@ -23,6 +40,7 @@ public class Player extends Entity{
 
     // Draw parameters
     public int screenX, screenY;
+    boolean dead;
 
     public Player(GamePanel gp, KeyL keyL){
         this.gp = gp;
@@ -40,16 +58,32 @@ public class Player extends Entity{
         collisionArea = new Rectangle(10, 12, 28, 36);
         collision = true;
 
-        maxHP = 100;
-        curHP = 100;
         exp = 0;
-        neededExp = 50;
-        attack = 5;
+        neededExp = 5;
+        gold = 0;
+        skillPoints = 0;
+
+        strength = 5;
+        vitality = 5;
+        defence = 0;
+        spellPower = 1;
+        sorcery = 5;
+
+        maxHP = 20 * vitality;
+        curHP = maxHP;
+
+        maxMP = 5 * sorcery;
+        curMP = maxMP;
+
+        weapon = new Weapon(0);
+        attack = weapon.damage + strength;
+
         invincibleCounter = 0;
         attacking = false;
         attacked = false;
 
         attackCollision = new Rectangle();
+        dead = false;
     }
 
     public void loadPlayerImage(){
@@ -224,8 +258,15 @@ public class Player extends Entity{
     public void contactMonster(Monster monster) {
 
         if (invincibleCounter == 0) {
-            decreaseHP(monster.attack);
+            int dmg;
+            if (defence >= monster.attack) {
+                dmg = 1;
+            } else {
+                dmg = monster.attack - defence;
+            }
+            decreaseHP(dmg);
             invincibleCounter = 30;
+            gp.playSoundEffect(5);
         }
 
     }
@@ -244,6 +285,7 @@ public class Player extends Entity{
 
             attacking = true;
             spriteCounter = 0;
+            gp.playSoundEffect(2);
 
         }
 
@@ -297,7 +339,7 @@ public class Player extends Entity{
 
             case UP -> {
                 attackCollision.x = 21;
-                attackCollision.y = 30;
+                attackCollision.y = -30;
                 attackCollision.width = 24;
                 attackCollision.height = 30;
             }
@@ -332,6 +374,14 @@ public class Player extends Entity{
             curHP = 0;
         }
 
+        if (curHP == 0) {
+
+            dead = true;
+            dying = true;
+            gp.gameOver();
+
+        }
+
     }
 
     public void increaseHP(int value) {
@@ -340,6 +390,20 @@ public class Player extends Entity{
 
         if (curHP > maxHP) {
             curHP = maxHP;
+        }
+
+    }
+
+    public void increaseExp(int value) {
+
+        exp += value;
+
+        if (neededExp <= exp) {
+
+            neededExp = neededExp + 5 + lvl;
+            lvl++;
+            skillPoints += 3;
+
         }
 
     }
