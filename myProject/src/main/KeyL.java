@@ -40,7 +40,6 @@ public class KeyL implements KeyListener {
 
                 if (code == KeyEvent.VK_SLASH){
                     gp.gameState = GamePanel.GameState.PAUSE;
-                    gp.sound.stop();
                 }
 
                 if (code == KeyEvent.VK_MINUS){
@@ -100,8 +99,6 @@ public class KeyL implements KeyListener {
 
                 if (code == KeyEvent.VK_SLASH){
                     gp.gameState = GamePanel.GameState.GAME;
-                    gp.sound.play();
-                    gp.sound.loop();
                 }
 
             }
@@ -182,6 +179,48 @@ public class KeyL implements KeyListener {
                     gp.gameState = GamePanel.GameState.MAIN_MENU;
                 }
 
+                if (code == KeyEvent.VK_ENTER){
+                    gp.ui.settingsAction();
+                }
+
+                if (code == KeyEvent.VK_W){
+                    gp.ui.menuIndex --;
+                    if (gp.ui.menuIndex < 0){
+                        gp.ui.menuIndex = 3;
+                    }
+                }
+
+                if (code == KeyEvent.VK_S){
+                    gp.ui.menuIndex ++;
+                    if (gp.ui.menuIndex > 3){
+                        gp.ui.menuIndex = 0;
+                    }
+                }
+
+                if (code == KeyEvent.VK_D) {
+
+                    if (gp.ui.menuIndex == 1 && gp.music.volumeScale < 4) {
+                        gp.music.volumeScale++;
+                        gp.music.getVolume();
+                    }
+                    if (gp.ui.menuIndex == 2 && gp.music.volumeScale < 4) {
+                        gp.se.volumeScale++;
+                    }
+
+                }
+
+                if (code == KeyEvent.VK_A) {
+
+                    if (gp.ui.menuIndex == 1 && gp.music.volumeScale > 0) {
+                        gp.music.volumeScale--;
+                        gp.music.getVolume();
+                    }
+                    if (gp.ui.menuIndex == 2 && gp.music.volumeScale > 0) {
+                        gp.se.volumeScale--;
+                    }
+
+                }
+
             }
 
             case INVENTORY -> {
@@ -235,6 +274,9 @@ public class KeyL implements KeyListener {
                 }
                 if (code == KeyEvent.VK_O) {
                     gp.player.attack();
+                }
+                if (code == KeyEvent.VK_L) {
+                    gp.player.throwProjectile();
                 }
 
             }

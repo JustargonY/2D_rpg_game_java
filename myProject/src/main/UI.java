@@ -3,11 +3,13 @@ package main;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 public class UI {
 
     GamePanel gp;
     Font workingFont;
+
     String[] titleButtons;
     int[] titleY;
     String[] menuButtons;
@@ -15,8 +17,15 @@ public class UI {
     String[] gameOverButtons;
     int[] gameOverY;
     String[] characterParams;
+    String[] settingsButtons;
+    int[] settingsY;
+
     public int menuIndex;
+
     public String currentDialog;
+
+    ArrayList<String> message = new ArrayList<>();
+    ArrayList<Integer> messageCounter = new ArrayList<>();
 
     public UI(GamePanel gp) {
         this.gp = gp;
@@ -32,6 +41,9 @@ public class UI {
 
         characterParams = new String[]{"Level", "Health", "Mana", "Exp", "Next Level Exp", "Skill Points", "Strength",
                 "Vitality", "Defence", "Spell Power", "Sorcery", "Gold"};
+
+        settingsButtons = new String[]{"Full Screen", "Music", "Sound Effects", "Back"};
+        settingsY = new int[]{y + 90, y + 120, y + 150, y + 250};
 
         menuIndex = 0;
 
@@ -189,6 +201,34 @@ public class UI {
         g.setColor(Color.BLACK);
         g.fillRoundRect(x, y, 300, 5 * gp.tileSize + 30, 10, 10);
 
+        g.setColor(Color.WHITE);
+        g.setFont(workingFont.deriveFont(Font.PLAIN, 24F));
+        drawCentralizedString("Settings", y + 30, g);
+
+        g.setFont(workingFont.deriveFont(Font.PLAIN, 22F));
+
+        x += 30;
+        y += 90;
+        g.drawString("Full Screen", x, y);
+        g.setStroke(new BasicStroke(3));
+        int h = g.getFontMetrics().getHeight();
+        g.drawRect(x + 180, y - h + 3, h - 5, h - 5);
+        if (gp.isFullScreen) {
+            g.fillRect(x + 180, y - h + 2, h - 5, h - 5);
+        }
+        y += 30;
+        g.drawString("Music", x, y);
+        g.drawRect(x + 180, y - h + 3, 4 * (h - 5), h - 5);
+        g.fillRect(x + 180, y - h + 3, gp.music.volumeScale * (h - 5), h - 5);
+        y += 30;
+        g.drawString("Sound Effects", x, y);
+        g.drawRect(x + 180, y - h + 3, 4 * (h - 5), h - 5);
+        g.fillRect(x + 180, y - h + 3, gp.se.volumeScale * (h - 5), h - 5);
+        y += 100;
+        g.drawString("Back", x, y);
+
+        drawMenuMarker(g);
+
     }
 
     private void drawInventoryScreen(Graphics2D g) {
@@ -206,7 +246,6 @@ public class UI {
         g.setFont(g.getFont().deriveFont(Font.PLAIN, 28F));
 
         int y = 50;
-//        g.drawString(String.valueOf(gp.player.lvl), x, y);
 
         for (String text: characterParams) {
 
@@ -350,6 +389,15 @@ public class UI {
 
             }
 
+            case SETTINGS -> {
+
+                text = settingsButtons[menuIndex];
+                y = settingsY[menuIndex];
+                x = gp.screenWidth/2 - 140;
+                g.drawString(">", x, y);
+
+            }
+
         }
 
     }
@@ -443,6 +491,75 @@ public class UI {
 
                 System.exit(0);
 
+            }
+
+        }
+
+    }
+
+    public void settingsAction() {
+
+        switch (menuIndex) {
+
+            case 0 -> {
+
+                if (gp.isFullScreen) {
+                    gp.setDefaultScreen();
+                } else {
+                    gp.setFullScreen();
+                }
+
+            }
+
+            case 1 -> {
+
+                // Music
+
+            }
+
+            case 2 -> {
+
+                // Sound Effects
+
+            }
+
+            case 3 -> {
+
+                gp.gameState = GamePanel.GameState.MAIN_MENU;
+
+            }
+
+        }
+
+        menuIndex = 0;
+
+    }
+
+    public void addMessage(String text) {
+
+        message.add(text);
+        messageCounter.add(0);
+
+    }
+
+    public void drawMessage(Graphics2D g) {
+
+        int messageX = 30, messageY = 4 * gp.tileSize;
+        g.setFont(workingFont.deriveFont(Font.PLAIN, 24F));
+        g.setColor(Color.WHITE);
+
+        for (int i = 0; i < message.size(); i++) {
+
+            g.drawString(message.get(i), messageX, messageY);
+            int counter = messageCounter.get(i) + 1;
+            messageCounter.set(i, counter);
+            messageY += 50;
+
+            if (messageCounter.get(i) > 180) {
+                if (message.iterator().hasNext()) {
+                    message.remove(i);
+                    messageCounter.remove(i);
+                }
             }
 
         }

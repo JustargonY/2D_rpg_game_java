@@ -1,9 +1,6 @@
 package main;
 
-import entity.Entity;
-import entity.Monster;
-import entity.NPC;
-import entity.Player;
+import entity.*;
 import terrain.TileManager;
 
 import javax.swing.*;
@@ -66,12 +63,14 @@ public class GamePanel extends JPanel implements Runnable{
     // Setting classes
     public TileManager tileManager = new TileManager(this);
     public UI ui = new UI(this);
-    Sound sound = new Sound();
+    Sound music = new Sound();
+    Sound se = new Sound();
     ObjectSetter objSetter = new ObjectSetter(this);
 
     // Entity lists
     public ArrayList<NPC> NPCList = new ArrayList<>();
     public ArrayList<Monster> monsterList = new ArrayList<>();
+    public ArrayList<Projectile> projectileList = new ArrayList<>();
     public ArrayList<Entity> entityList = new ArrayList<>();
 
     public GamePanel() {
@@ -154,9 +153,14 @@ public class GamePanel extends JPanel implements Runnable{
             case GAME, INVENTORY, GAME_OVER -> {
                 player.update();
                 NPCList.forEach(NPC::update);
+                projectileList.forEach(Projectile::update);
+                monsterList.forEach(Monster::update);
+                projectileList.removeIf(projectile -> projectile.remove);
                 monsterList.removeIf(monster -> monster.curHP == 0 && !monster.dying);
                 entityList.removeIf(entity -> entity.curHP == 0 && !entity.dying);
-                monsterList.forEach(Monster::update);
+                if (monsterList.size() == 0) {
+                    objSetter.randomMonsterSpawn(3);
+                }
             }
             case MAIN_MENU -> {}
         }
@@ -170,16 +174,29 @@ public class GamePanel extends JPanel implements Runnable{
         switch (gameState){
             case GAME, PAUSE, DIALOG, INVENTORY, GAME_OVER -> {
                 tileManager.draw(g2);
-                NPCList.forEach(npc -> npc.draw(g2));
-                monsterList.forEach(monster -> monster.draw(g2));
+                if (NPCList.iterator().hasNext()) {
+                    NPCList.forEach(npc -> npc.draw(g2));
+                }
+                if (monsterList.iterator().hasNext()) {
+                    monsterList.forEach(monster -> monster.draw(g2));
+                }
+                if (projectileList.iterator().hasNext()) {
+                    projectileList.forEach(projectile -> projectile.draw(g2));
+                }
                 player.draw(g2);
+                ui.drawMessage(g2);
                 ui.draw(g2);
                 g2.dispose();
             }
             case MAIN_MENU, SETTINGS -> {
                 tileManager.draw(g2);
                 NPCList.forEach(npc -> npc.draw(g2));
-                monsterList.forEach(monster -> monster.draw(g2));
+                if (monsterList.iterator().hasNext()) {
+                    monsterList.forEach(monster -> monster.draw(g2));
+                }
+                if (projectileList.iterator().hasNext()) {
+                    projectileList.forEach(projectile -> projectile.draw(g2));
+                }
                 ui.draw(g2);
                 g2.dispose();
             }
@@ -200,18 +217,18 @@ public class GamePanel extends JPanel implements Runnable{
     }
 
     public void playTrack(int i) {
-        sound.load(i);
-        sound.play();
-        sound.loop();
+        music.load(i);
+        music.play();
+        music.loop();
     }
 
     public void stopTrack() {
-        sound.stop();
+        music.stop();
     }
 
     public void playSoundEffect(int i) {
-        sound.load(i);
-        sound.play();
+        se.load(i);
+        se.play();
     }
 
     public void gameOver() {
