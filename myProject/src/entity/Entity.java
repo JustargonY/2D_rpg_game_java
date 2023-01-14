@@ -97,6 +97,9 @@ public abstract class Entity {
 
                 gp.player.increaseExp(((Monster) this).exp);
                 gp.player.gold += ((Monster) this).gold;
+                gp.ui.addMessage("Killed " + ((Monster) this).name);
+                gp.ui.addMessage("+" + ((Monster) this).exp + "Exp");
+                gp.ui.addMessage("+" + ((Monster) this).gold + "Gold");
 
             }
         }

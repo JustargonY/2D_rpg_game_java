@@ -366,6 +366,30 @@ public class Player extends Entity{
 
     }
 
+    public void throwProjectile() {
+
+        if (curMP >= 5) {
+
+            int x = worldX, y = worldY;
+
+            switch (direction) {
+
+                case UP -> y = worldY - gp.tileSize;
+                case DOWN -> y = worldY + gp.tileSize;
+                case LEFT -> x = worldX - gp.tileSize;
+                case RIGHT -> x = worldX + gp.tileSize;
+
+            }
+
+            Projectile projectile = new Projectile(gp, x, y);
+            gp.projectileList.add(projectile);
+
+            curMP -= 5;
+
+        }
+
+    }
+
     public void decreaseHP(int value) {
 
         if (curHP >= value) {
@@ -378,6 +402,7 @@ public class Player extends Entity{
 
             dead = true;
             dying = true;
+            dyingFrame = 0;
             gp.gameOver();
 
         }
@@ -400,9 +425,11 @@ public class Player extends Entity{
 
         if (neededExp <= exp) {
 
-            neededExp = neededExp + 5 + lvl;
+            neededExp = neededExp + 5 + 2 * lvl;
             lvl++;
             skillPoints += 3;
+            gp.playSoundEffect(8);
+            gp.ui.addMessage("Level Up!");
 
         }
 
