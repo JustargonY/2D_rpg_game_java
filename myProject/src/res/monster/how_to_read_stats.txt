@@ -5,3 +5,5 @@
 4 - collisionArea.height
 5 - maxHp
 6 - attack
+7 - exp
+8 - gold
