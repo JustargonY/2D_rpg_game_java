@@ -7,7 +7,10 @@ import java.util.ArrayList;
 
 public class Projectile extends Entity {
 
+    // Stat parameters
     public int damage;
+
+    // Delete condition
     public boolean remove;
 
     public Projectile(GamePanel gp, int x, int y) {

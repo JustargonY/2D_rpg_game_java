@@ -10,7 +10,8 @@ import java.util.Random;
 
 public class Monster extends Entity {
 
-    String name;
+    // Name
+    public String name;
 
     // Stat parameters
     int attack;
@@ -19,6 +20,7 @@ public class Monster extends Entity {
 
     // Move parameters
     int actionLock;
+    public boolean onPath = false;
 
     public Monster(GamePanel gp, String name, int x, int y) {
 
@@ -73,7 +75,13 @@ public class Monster extends Entity {
     @Override
     public void update() {
 
-        updateDirection();
+        boolean IS_ON_THE_SCREEN = worldX > gp.player.worldX - gp.player.screenX - gp.tileSize &&
+                worldX < gp.player.worldX + gp.player.screenX + gp.tileSize &&
+                worldY > gp.player.worldY - gp.player.screenY - gp.tileSize &&
+                worldY < gp.player.worldY + gp.player.screenY + gp.tileSize;
+
+        onPath = IS_ON_THE_SCREEN;
+
         act();
         super.update();
 
@@ -141,7 +149,7 @@ public class Monster extends Entity {
 
     }
 
-    private void playerCollisionCheck() {
+    public void playerCollisionCheck() {
 
         int defaultX = collisionArea.x;
         int defaultY = collisionArea.y;
@@ -199,24 +207,55 @@ public class Monster extends Entity {
 
     private void act() {
 
-        collisionOn = false;
-        collisionCheck();
-        entityCollisionCheck(gp.entityList);
-        if (!gp.player.dead) {
-            playerCollisionCheck();
-        }
+        if (onPath){
 
-        if (!collisionOn) {
+            int goalCol = (gp.player.worldX + gp.player.collisionArea.x)/gp.tileSize;
+            int goalRow = (gp.player.worldY + gp.player.collisionArea.y)/gp.tileSize;
 
-            switch (direction) {
+            searchPath(goalCol, goalRow);
 
-                case UP -> worldY -= speed;
-                case DOWN -> worldY += speed;
-                case LEFT -> worldX -= speed;
-                case RIGHT -> worldX += speed;
+            collisionOn = false;
+            collisionCheck();
+            entityCollisionCheck(gp.entityList);
+            if (!gp.player.dead) {
+                playerCollisionCheck();
+            }
+
+            if (!collisionOn) {
+
+                switch (direction) {
+
+                    case UP -> worldY -= speed;
+                    case DOWN -> worldY += speed;
+                    case LEFT -> worldX -= speed;
+                    case RIGHT -> worldX += speed;
+
+                }
 
             }
 
+        } else {
+
+            updateDirection();
+            collisionOn = false;
+            collisionCheck();
+            entityCollisionCheck(gp.entityList);
+            if (!gp.player.dead) {
+                playerCollisionCheck();
+            }
+
+            if (!collisionOn) {
+
+                switch (direction) {
+
+                    case UP -> worldY -= speed;
+                    case DOWN -> worldY += speed;
+                    case LEFT -> worldX -= speed;
+                    case RIGHT -> worldX += speed;
+
+                }
+
+            }
         }
 
     }
@@ -232,6 +271,78 @@ public class Monster extends Entity {
 
             curHP -= value;
             invincibleCounter = 26;
+
+        }
+
+    }
+
+    public void searchPath(int goalCol, int goalRow){
+
+        int startCol = (worldX + collisionArea.x)/gp.tileSize;
+        int startRow = (worldY + collisionArea.y)/gp.tileSize;
+
+        gp.pathfinder.setNodes(startCol, startRow, goalCol, goalRow);
+
+        if(gp.pathfinder.search()){
+
+            int nextX = gp.pathfinder.pathList.get(0).col * gp.tileSize;
+            int nextY = gp.pathfinder.pathList.get(0).row * gp.tileSize;
+
+            int enLeftX = worldX + collisionArea.x;
+            int enRightX = worldX + collisionArea.x + collisionArea.width;
+            int enTopY = worldY + collisionArea.y;
+            int enBottomY = worldY + collisionArea.y + collisionArea.height;
+
+            if (enTopY > nextY && enLeftX >= nextX && enRightX < nextX + gp.tileSize){
+                direction = Directions.UP;
+            } else if (enTopY < nextY && enLeftX >= nextX && enRightX < nextX + gp.tileSize){
+                direction = Directions.DOWN;
+            } else if (enTopY >= nextY && enBottomY < nextY + gp.tileSize) {
+                if (enLeftX > nextX) {
+                    direction = Directions.LEFT;
+                }
+                if (enLeftX < nextX) {
+                    direction = Directions.RIGHT;
+                }
+            } else if (enTopY > nextY && enLeftX > nextX){
+                direction = Directions.UP;
+                collisionCheck();
+                entityCollisionCheck(gp.entityList);
+                playerCollisionCheck();
+                if (collisionOn) {
+                    direction = Directions.LEFT;
+                }
+            } else if (enTopY > nextY && enLeftX < nextX){
+                direction = Directions.UP;
+                collisionCheck();
+                entityCollisionCheck(gp.entityList);
+                playerCollisionCheck();
+                if (collisionOn) {
+                    direction = Directions.RIGHT;
+                }
+            } else if (enTopY < nextY && enLeftX > nextX) {
+                direction = Directions.DOWN;
+                collisionCheck();
+                entityCollisionCheck(gp.entityList);
+                playerCollisionCheck();
+                if (collisionOn) {
+                    direction = Directions.LEFT;
+                }
+            } else if (enTopY < nextY && enLeftX < nextX){
+                direction = Directions.DOWN;
+                collisionCheck();
+                entityCollisionCheck(gp.entityList);
+                playerCollisionCheck();
+                if (collisionOn) {
+                    direction = Directions.RIGHT;
+                }
+            }
+
+            int nextCol = gp.pathfinder.pathList.get(0).col;
+            int nextRow = gp.pathfinder.pathList.get(0).row;
+            if (nextCol == goalCol && nextRow == goalRow) {
+                onPath = false;
+            }
 
         }
 

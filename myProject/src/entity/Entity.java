@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 public abstract class Entity {
 
@@ -19,6 +20,9 @@ public abstract class Entity {
 
     GamePanel gp;
 
+    // Random parameter for drop
+    Random random = new Random();
+
     // Move parameters
     public int worldX, worldY;
     public int speed;
@@ -30,6 +34,7 @@ public abstract class Entity {
     public BufferedImage up1, up2, down1, down2, left1, left2, right1, right2;
     public BufferedImage attackUp1, attackUp2, attackDown1, attackDown2, attackLeft1, attackLeft2, attackRight1, attackRight2;
     public boolean dying;
+    public boolean dead;
     int dyingFrame;
 
     // Collision parameters
@@ -93,6 +98,7 @@ public abstract class Entity {
 
         if (dyingFrame > 30) {
             dying = false;
+            dead = true;
             if (this instanceof Monster) {
 
                 gp.player.increaseExp(((Monster) this).exp);
@@ -100,6 +106,13 @@ public abstract class Entity {
                 gp.ui.addMessage("Killed " + ((Monster) this).name);
                 gp.ui.addMessage("+" + ((Monster) this).exp + "Exp");
                 gp.ui.addMessage("+" + ((Monster) this).gold + "Gold");
+
+                int drop = random.nextInt(100) + 1;
+                if (drop > 75 && drop <= 90){
+                    gp.createList.add(new HealthPotionEntity(gp, worldX, worldY));
+                } else if (drop > 90) {
+                    gp.createList.add(new ManaPotionEntity(gp, worldX, worldY));
+                }
 
             }
         }
@@ -228,6 +241,13 @@ public abstract class Entity {
                             if (entity.collision) {
                                 collisionOn = true;
                             }
+                            if (this instanceof Player) {
+
+                                if (entity instanceof WeaponEntity) ((Player)this).pickUpWeapon((WeaponEntity)entity);
+                                if (entity instanceof ArmorEntity) ((Player)this).pickUpArmor((ArmorEntity)entity);
+                                if (entity instanceof ManaPotionEntity) ((Player)this).pickUpMpPotion((ManaPotionEntity) entity);
+                                if (entity instanceof HealthPotionEntity) ((Player)this).pickUpHpPotion((HealthPotionEntity) entity);
+                            }
                         }
                     }
 
@@ -236,6 +256,13 @@ public abstract class Entity {
                         if (collisionArea.intersects(entity.collisionArea)) {
                             if (entity.collision) {
                                 collisionOn = true;
+                            }
+                            if (this instanceof Player) {
+
+                                if (entity instanceof WeaponEntity) ((Player)this).pickUpWeapon((WeaponEntity)entity);
+                                if (entity instanceof ArmorEntity) ((Player)this).pickUpArmor((ArmorEntity)entity);
+                                if (entity instanceof ManaPotionEntity) ((Player)this).pickUpMpPotion((ManaPotionEntity) entity);
+                                if (entity instanceof HealthPotionEntity) ((Player)this).pickUpHpPotion((HealthPotionEntity) entity);
                             }
                         }
                     }
@@ -246,6 +273,13 @@ public abstract class Entity {
                             if (entity.collision) {
                                 collisionOn = true;
                             }
+                            if (this instanceof Player) {
+
+                                if (entity instanceof WeaponEntity) ((Player)this).pickUpWeapon((WeaponEntity)entity);
+                                if (entity instanceof ArmorEntity) ((Player)this).pickUpArmor((ArmorEntity)entity);
+                                if (entity instanceof ManaPotionEntity) ((Player)this).pickUpMpPotion((ManaPotionEntity) entity);
+                                if (entity instanceof HealthPotionEntity) ((Player)this).pickUpHpPotion((HealthPotionEntity) entity);
+                            }
                         }
                     }
 
@@ -254,6 +288,13 @@ public abstract class Entity {
                         if (collisionArea.intersects(entity.collisionArea)) {
                             if (entity.collision) {
                                 collisionOn = true;
+                            }
+                            if (this instanceof Player) {
+
+                                if (entity instanceof WeaponEntity) ((Player)this).pickUpWeapon((WeaponEntity)entity);
+                                if (entity instanceof ArmorEntity) ((Player)this).pickUpArmor((ArmorEntity)entity);
+                                if (entity instanceof ManaPotionEntity) ((Player)this).pickUpMpPotion((ManaPotionEntity) entity);
+                                if (entity instanceof HealthPotionEntity) ((Player)this).pickUpHpPotion((HealthPotionEntity) entity);
                             }
                         }
                     }

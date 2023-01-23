@@ -2,31 +2,35 @@ package entity;
 
 import main.GamePanel;
 import main.KeyL;
-import objects.Weapon;
+import objects.*;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public class Player extends Entity{
 
-    // Stat parameters
+    // Exp parameters
     public int exp;
     public int neededExp;
     public int lvl;
 
+    // Stat parameters
     public int maxMP;
     public int curMP;
     public int attack;
+    public int resist;
     public int strength;
     public int vitality;
     public int defence;
     public int spellPower;
     public int sorcery;
-
     public int skillPoints;
-
     public int gold;
+
+    // Equip parameters
     public Weapon weapon;
+    public Armor armor;
 
     // Attack system
     boolean attacking;
@@ -41,6 +45,9 @@ public class Player extends Entity{
     // Draw parameters
     public int screenX, screenY;
     boolean dead;
+
+    // Inventory
+    public ArrayList<Item> inventory;
 
     public Player(GamePanel gp, KeyL keyL){
         this.gp = gp;
@@ -75,8 +82,10 @@ public class Player extends Entity{
         maxMP = 5 * sorcery;
         curMP = maxMP;
 
-        weapon = new Weapon(0);
+        weapon = new Weapon(gp, 0, "simple_sword", "Simple Sword");
+        armor = new Armor(gp, 0, "simple_armor", "Simple Armor");
         attack = weapon.damage + strength;
+        resist = defence + armor.defence;
 
         invincibleCounter = 0;
         attacking = false;
@@ -84,6 +93,13 @@ public class Player extends Entity{
 
         attackCollision = new Rectangle();
         dead = false;
+
+        inventory = new ArrayList<>();
+        inventory.add(weapon);
+        inventory.add(armor);
+        inventory.add(new HealthPotion(gp));
+        inventory.add(new HealthPotion(gp));
+        inventory.add(new ManaPotion(gp));
     }
 
     public void loadPlayerImage(){
@@ -105,6 +121,26 @@ public class Player extends Entity{
         attackRight1 = loadImage("/player/hero_attack_right_1.png");
         attackRight2 = loadImage("/player/hero_attack_right_2.png");
 
+    }
+
+    public void setAttack() {
+        attack = strength + weapon.damage;
+    }
+
+    public void setDefence() {
+        resist = defence + armor.defence;
+    }
+
+    public void setHP() {
+        int d = 20 * vitality - maxHP;
+        maxHP = 20 * vitality;
+        increaseHP(d);
+    }
+
+    public void setMP() {
+        int d = 5 * sorcery - maxMP;
+        maxMP = 5 * sorcery;
+        increaseMP(d);
     }
 
     @Override
@@ -259,10 +295,10 @@ public class Player extends Entity{
 
         if (invincibleCounter == 0) {
             int dmg;
-            if (defence >= monster.attack) {
+            if (resist >= monster.attack) {
                 dmg = 1;
             } else {
-                dmg = monster.attack - defence;
+                dmg = monster.attack - resist;
             }
             decreaseHP(dmg);
             invincibleCounter = 30;
@@ -296,7 +332,7 @@ public class Player extends Entity{
         spriteCounter++;
         if (spriteCounter <= 5) {
             spriteNum = 1;
-        } else if(spriteCounter <= 25) {
+        } else if(spriteCounter <= 20) {
             spriteNum = 2;
         } else {
             spriteNum = 1;
@@ -322,7 +358,6 @@ public class Player extends Entity{
             if (checkZone.intersects(monster.collisionArea) && !attacked){
 
                 attackMonster(monster);
-                attacked = false;
 
             }
 
@@ -419,6 +454,16 @@ public class Player extends Entity{
 
     }
 
+    public void increaseMP(int value) {
+
+        curMP += value;
+
+        if (curMP > maxMP) {
+            curMP = maxMP;
+        }
+
+    }
+
     public void increaseExp(int value) {
 
         exp += value;
@@ -434,4 +479,41 @@ public class Player extends Entity{
         }
 
     }
+
+    public void pickUpWeapon(WeaponEntity weaponEnt) {
+
+        weaponEnt.curHP = 0;
+        Weapon weapon = weaponEnt.createWeapon();
+        gp.ui.addMessage("Picked up " + weapon.displayName);
+        inventory.add(weapon);
+
+    }
+
+    public void pickUpArmor(ArmorEntity armorEnt) {
+
+        armorEnt.curHP = 0;
+        Armor armor = armorEnt.createArmor();
+        gp.ui.addMessage("Picked up " + armor.displayName);
+        inventory.add(armor);
+
+    }
+
+    public void pickUpHpPotion(HealthPotionEntity healthPotionEntity) {
+
+        healthPotionEntity.curHP = 0;
+        HealthPotion hp = healthPotionEntity.createPotion();
+        gp.ui.addMessage("Picked up Health Potion");
+        inventory.add(hp);
+
+    }
+
+    public void pickUpMpPotion(ManaPotionEntity manaPotionEntity) {
+
+        manaPotionEntity.curHP = 0;
+        ManaPotion mp = manaPotionEntity.createPotion();
+        gp.ui.addMessage("Picked up Mana Potion");
+        inventory.add(mp);
+
+    }
+
 }

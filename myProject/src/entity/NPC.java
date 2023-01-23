@@ -10,7 +10,8 @@ import java.util.ArrayList;
 
 public class NPC extends Entity{
 
-    String name;
+    // Name
+    public String name;
 
     // Dialog parameters
     ArrayList<String> dialogPhrases;
@@ -36,7 +37,10 @@ public class NPC extends Entity{
         curHP = 1;
     }
 
-    private void loadNPCImage() {
+    public NPC() {
+    }
+
+    protected void loadNPCImage() {
 
         up1 = loadImage("/npc/" + name + "_up_1.png");
         up2 = loadImage("/npc/" + name + "_up_2.png");
@@ -49,7 +53,7 @@ public class NPC extends Entity{
 
     }
 
-    private void loadDialog() {
+    protected void loadDialog() {
 
         InputStream is = getClass().getResourceAsStream("/dialogues/" + name +".txt");
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
