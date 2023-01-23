@@ -5,26 +5,26 @@ import main.GamePanel;
 import javax.imageio.ImageIO;
 import java.io.IOException;
 
-public class HealthPotion extends Item{
+public class ManaPotion extends Item{
 
-    public HealthPotion(GamePanel gp) {
+    public ManaPotion(GamePanel gp) {
 
         this.gp = gp;
-        name = "health_potion";
+        name = "mana_potion";
 
         try {
-            image = ImageIO.read(getClass().getResourceAsStream("/object/usable/health_potion.png"));
+            image = ImageIO.read(getClass().getResourceAsStream("/object/usable/mana_potion.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        description = "Strange red liquid.\nRestores 25 HP";
+        description = "Strange blue liquid.\nRestores 20 MP";
 
     }
 
     public void drink() {
 
-        gp.player.increaseHP(25);
+        gp.player.increaseMP(20);
         gp.player.inventory.remove(this);
 
     }
