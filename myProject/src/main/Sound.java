@@ -6,8 +6,13 @@ import java.util.ArrayList;
 
 public class Sound {
 
+    // Playing track
     Clip clip;
+
+    // Track list
     ArrayList<URL> soundURL = new ArrayList<>();
+
+    // Sound control parameters
     FloatControl fc;
     int volumeScale = 3;
     float volume;

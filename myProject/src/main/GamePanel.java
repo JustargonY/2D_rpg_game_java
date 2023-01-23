@@ -1,5 +1,7 @@
 package main;
 
+import ai.Pathfinder;
+import dataSave.SaveLoadSystem;
 import entity.*;
 import terrain.TileManager;
 
@@ -18,6 +20,8 @@ public class GamePanel extends JPanel implements Runnable{
         DIALOG,
         INVENTORY,
         SETTINGS,
+        LVL_UP,
+        TRADE,
         GAME_OVER
     }
 
@@ -48,7 +52,7 @@ public class GamePanel extends JPanel implements Runnable{
     public boolean isFullScreen;
 
     // Game options
-    final int FPS = 60;
+    final int FPS = 60;    // !DANGER! Affects game speed
     public GameState gameState;
 
     // Main thread
@@ -65,13 +69,16 @@ public class GamePanel extends JPanel implements Runnable{
     public UI ui = new UI(this);
     Sound music = new Sound();
     Sound se = new Sound();
-    ObjectSetter objSetter = new ObjectSetter(this);
+    public ObjectSetter objSetter = new ObjectSetter(this);
+    public SaveLoadSystem sls = new SaveLoadSystem(this);
+    public Pathfinder pathfinder = new Pathfinder(this);
 
     // Entity lists
     public ArrayList<NPC> NPCList = new ArrayList<>();
     public ArrayList<Monster> monsterList = new ArrayList<>();
     public ArrayList<Projectile> projectileList = new ArrayList<>();
     public ArrayList<Entity> entityList = new ArrayList<>();
+    public ArrayList<Entity> createList = new ArrayList<>();
 
     public GamePanel() {
 
@@ -87,6 +94,7 @@ public class GamePanel extends JPanel implements Runnable{
         gameState = GameState.TITLE_SCREEN;
         objSetter.setNPCList();
         objSetter.setMonsterList();
+        objSetter.setItemList();
         playTrack(1);
 
         tmpScreen = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
@@ -150,19 +158,29 @@ public class GamePanel extends JPanel implements Runnable{
     public void update() {
 
         switch (gameState){
-            case GAME, INVENTORY, GAME_OVER -> {
+            case GAME, GAME_OVER -> {
+                // Update
                 player.update();
-                NPCList.forEach(NPC::update);
-                projectileList.forEach(Projectile::update);
-                monsterList.forEach(Monster::update);
+                entityList.forEach(Entity::update);
+                if (projectileList.iterator().hasNext()) {
+                    projectileList.forEach(Projectile::update);
+                }
+
+                // Remove
                 projectileList.removeIf(projectile -> projectile.remove);
                 monsterList.removeIf(monster -> monster.curHP == 0 && !monster.dying);
                 entityList.removeIf(entity -> entity.curHP == 0 && !entity.dying);
+
+                // Create
+                if (createList.iterator().hasNext()) {
+                    entityList.addAll(createList);
+                    createList.clear();
+                }
                 if (monsterList.size() == 0) {
                     objSetter.randomMonsterSpawn(3);
                 }
+
             }
-            case MAIN_MENU -> {}
         }
 
     }
@@ -172,17 +190,16 @@ public class GamePanel extends JPanel implements Runnable{
         g2 = (Graphics2D) tmpScreen.getGraphics();
 
         switch (gameState){
-            case GAME, PAUSE, DIALOG, INVENTORY, GAME_OVER -> {
+            case GAME, PAUSE, DIALOG, INVENTORY, GAME_OVER, LVL_UP, TRADE -> {
                 tileManager.draw(g2);
-                if (NPCList.iterator().hasNext()) {
-                    NPCList.forEach(npc -> npc.draw(g2));
-                }
-                if (monsterList.iterator().hasNext()) {
-                    monsterList.forEach(monster -> monster.draw(g2));
+
+                if (entityList.iterator().hasNext()) {
+                    entityList.forEach(entity -> entity.draw(g2));
                 }
                 if (projectileList.iterator().hasNext()) {
                     projectileList.forEach(projectile -> projectile.draw(g2));
                 }
+
                 player.draw(g2);
                 ui.drawMessage(g2);
                 ui.draw(g2);
@@ -190,13 +207,14 @@ public class GamePanel extends JPanel implements Runnable{
             }
             case MAIN_MENU, SETTINGS -> {
                 tileManager.draw(g2);
-                NPCList.forEach(npc -> npc.draw(g2));
-                if (monsterList.iterator().hasNext()) {
-                    monsterList.forEach(monster -> monster.draw(g2));
-                }
+
                 if (projectileList.iterator().hasNext()) {
                     projectileList.forEach(projectile -> projectile.draw(g2));
                 }
+                if (entityList.iterator().hasNext()) {
+                    entityList.forEach(entity -> entity.draw(g2));
+                }
+
                 ui.draw(g2);
                 g2.dispose();
             }
@@ -250,6 +268,8 @@ public class GamePanel extends JPanel implements Runnable{
 
         objSetter.setMonsterList();
         objSetter.setNPCList();
+        objSetter.setItemList();
 
     }
+
 }

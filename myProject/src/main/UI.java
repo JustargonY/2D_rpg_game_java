@@ -1,15 +1,22 @@
 package main;
 
+import entity.Merchant;
+import objects.*;
+
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+// Class is not optimized and very hard to read
 public class UI {
 
     GamePanel gp;
+
+    // Game Font
     Font workingFont;
 
+    // Menu displays and controls parameters
     String[] titleButtons;
     int[] titleY;
     String[] menuButtons;
@@ -19,16 +26,27 @@ public class UI {
     String[] characterParams;
     String[] settingsButtons;
     int[] settingsY;
+    String[] lvlUpButtons;
+    int[] lvlUpY;
+    String[] lvlUpCostsDisplay;
+    int[] lvlUpCosts;
 
+    // Indexes for different game states
     public int menuIndex;
+    public int inventoryIndex;
+    public int tradeIndex;
 
+    // Information to display during some game states
     public String currentDialog;
+    public Merchant currentMerchant;
 
+    // Message system
     ArrayList<String> message = new ArrayList<>();
     ArrayList<Integer> messageCounter = new ArrayList<>();
 
     public UI(GamePanel gp) {
         this.gp = gp;
+
         titleButtons = new String[]{"New Game", "Load Game", "Exit"};
         titleY = new int[]{5 * gp.tileSize, 6 * gp.tileSize, 7 * gp.tileSize};
 
@@ -45,7 +63,18 @@ public class UI {
         settingsButtons = new String[]{"Full Screen", "Music", "Sound Effects", "Back"};
         settingsY = new int[]{y + 90, y + 120, y + 150, y + 250};
 
+        y = gp.screenHeight/2 - 4 * gp.tileSize;
+
+        lvlUpButtons = new String[]{"Strength", "Vitality", "Defence", "Spell Power", "Sorcery"};
+        lvlUpY = new int[]{y + 90, y + 120, y + 150, y + 180, y + 210};
+
+        String s = "It will cost ";
+        lvlUpCosts = new int[]{1, 1, 5, 3, 1};
+        lvlUpCostsDisplay = new String[]{s + lvlUpCosts[0] + " SP.", s + lvlUpCosts[1] + " SP.", s + lvlUpCosts[2] + " SP.",
+                s + lvlUpCosts[3] + " SP.", s + lvlUpCosts[4] + " SP."};
+
         menuIndex = 0;
+        inventoryIndex = 0;
 
         currentDialog = "";
 
@@ -70,6 +99,8 @@ public class UI {
             case SETTINGS -> drawSettingsScreen(g);
             case INVENTORY -> drawInventoryScreen(g);
             case GAME_OVER -> drawGameOverScreen(g);
+            case LVL_UP -> drawLvlUpScreen(g);
+            case TRADE -> drawTradeScreen(g);
         }
 
     }
@@ -243,7 +274,7 @@ public class UI {
         g.fillRoundRect(30, 20, 320, 10*gp.tileSize, 10, 10);
 
         g.setColor(Color.WHITE);
-        g.setFont(g.getFont().deriveFont(Font.PLAIN, 28F));
+        g.setFont(workingFont.deriveFont(Font.PLAIN, 28F));
 
         int y = 50;
 
@@ -255,6 +286,140 @@ public class UI {
         }
 
         drawParams(g);
+
+        g.setColor(Color.WHITE);
+        g.setStroke(new BasicStroke(3));
+        g.drawRoundRect(12 * gp.tileSize, 20, 8 * gp.tileSize + 10, 6 * gp.tileSize + 10, 5, 10);
+
+        g.setColor(Color.BLACK);
+        g.fillRoundRect(12 * gp.tileSize, 20, 8 * gp.tileSize + 10, 6 * gp.tileSize + 10, 5, 10);
+
+        drawItems(g);
+
+        g.setColor(Color.WHITE);
+        g.drawRoundRect(12*gp.tileSize + gp.tileSize * (inventoryIndex % 8) + 5, 25 + gp.tileSize * (inventoryIndex / 8),
+                gp.tileSize, gp.tileSize, 5, 5);
+
+        g.drawRoundRect(12 * gp.tileSize, 8 * gp.tileSize, 8 * gp.tileSize + 10, 2 * gp.tileSize + 20, 10, 10);
+        g.setColor(Color.BLACK);
+        g.fillRoundRect(12 * gp.tileSize, 8 * gp.tileSize, 8 * gp.tileSize + 10, 2 * gp.tileSize + 20, 10, 10);
+
+        if (inventoryIndex < gp.player.inventory.size()) {
+
+            g.setColor(Color.WHITE);
+            g.setFont(workingFont.deriveFont(Font.PLAIN, 28F));
+            Item it = gp.player.inventory.get(inventoryIndex);
+            int j = 0;
+
+            for (String s: it.description.split("\n")){
+                g.drawString(s, 12 * gp.tileSize + 10, 8 * gp.tileSize + 35 + 28 * j);
+                j++;
+            }
+
+        }
+
+    }
+
+    private void drawItems(Graphics2D g) {
+
+        for (int i = 0; i < gp.player.inventory.size() && i < 48; i++) {
+
+            Item it = gp.player.inventory.get(i);
+
+            if (it == gp.player.weapon || it == gp.player.armor) {
+
+                g.setColor(new Color(232, 217, 102));
+                g.fillRoundRect(12*gp.tileSize + gp.tileSize * (i % 8) + 5, 25 + gp.tileSize * (i / 8),
+                        gp.tileSize, gp.tileSize, 5, 5);
+
+            }
+
+            g.drawImage(it.image, 12*gp.tileSize + gp.tileSize * (i % 8) + 5, 25 + gp.tileSize * (i / 8),
+                    gp.tileSize, gp.tileSize, null);
+        }
+
+    }
+
+    public void drawTradeScreen(Graphics2D g) {
+
+        g.setColor(Color.WHITE);
+        g.setStroke(new BasicStroke(5));
+        g.drawRoundRect(30, 20, 8 * gp.tileSize + 10, 6 * gp.tileSize + 10, 10, 10);
+        g.drawRoundRect(30, 8 * gp.tileSize, 8 * gp.tileSize + 10, 2 * gp.tileSize + 20, 10, 10);
+
+        g.setColor(Color.BLACK);
+        g.fillRoundRect(30, 20, 8 * gp.tileSize + 10, 6 * gp.tileSize + 10, 10, 10);
+        g.fillRoundRect(30, 8 * gp.tileSize, 8 * gp.tileSize + 10, 2 * gp.tileSize + 20, 10, 10);
+
+        g.setColor(Color.WHITE);
+        g.setStroke(new BasicStroke(5));
+        g.drawRoundRect(12 * gp.tileSize, 20, 8 * gp.tileSize + 10, 6 * gp.tileSize + 10, 5, 10);
+
+        g.setColor(Color.BLACK);
+        g.fillRoundRect(12 * gp.tileSize, 20, 8 * gp.tileSize + 10, 6 * gp.tileSize + 10, 5, 10);
+
+        g.setColor(Color.WHITE);
+        g.setFont(workingFont.deriveFont(Font.PLAIN, 28F));
+        g.drawString("Gold: " + gp.player.gold, 7 * gp.tileSize - 20, 6 * gp.tileSize + 20);
+
+        drawItems(g);
+
+        for (int i = 0; i < currentMerchant.inventory.size() && i < 48; i++) {
+
+            Item it = currentMerchant.inventory.get(i);
+
+            g.drawImage(it.image, 30 + gp.tileSize * (i % 8) + 5, 25 + gp.tileSize * (i / 8),
+                    gp.tileSize, gp.tileSize, null);
+        }
+
+        g.setColor(Color.WHITE);
+        g.setStroke(new BasicStroke(3));
+        g.drawRoundRect(30 + gp.tileSize * (tradeIndex % 8) + 5, 25 + gp.tileSize * (tradeIndex / 8),
+                gp.tileSize, gp.tileSize, 5, 5);
+
+        if (tradeIndex < currentMerchant.inventory.size()) {
+
+            g.setColor(Color.WHITE);
+            g.setFont(workingFont.deriveFont(Font.PLAIN, 28F));
+            Item it = currentMerchant.inventory.get(tradeIndex);
+            int j = 0;
+
+            for (String s: it.description.split("\n")){
+                g.drawString(s, 40, 8 * gp.tileSize + 35 + 28 * j);
+                j++;
+            }
+            String text = "Costs " + currentMerchant.costs[tradeIndex] + " gold.";
+            g.drawString(text, 40, 8 * gp.tileSize + 35 + 28 * j);
+
+        }
+
+    }
+
+    public void useItem(){
+
+        if (inventoryIndex < gp.player.inventory.size()) {
+
+            Item it = gp.player.inventory.get(inventoryIndex);
+
+            switch (it.getClass().getSimpleName()){
+
+                case "Armor" -> {
+                    gp.player.armor = (Armor)it;
+                    gp.player.setDefence();
+                }
+
+                case "Weapon" -> {
+                    gp.player.weapon = (Weapon)it;
+                    gp.player.setAttack();
+                }
+
+                case "ManaPotion" -> ((ManaPotion)it).drink();
+
+                case "HealthPotion" -> ((HealthPotion)it).drink();
+
+            }
+
+        }
 
     }
 
@@ -325,6 +490,82 @@ public class UI {
 
     }
 
+    private void drawLvlUpScreen(Graphics2D g) {
+
+        drawGameScreen(g);
+
+        int x = gp.screenWidth/2 - 150;
+        int y = gp.screenHeight/2 - 4 * gp.tileSize;
+
+        g.setColor(Color.WHITE);
+        g.setStroke(new BasicStroke(5));
+        g.drawRoundRect(x, y, 300, 5 * gp.tileSize + 50, 10, 10);
+
+        g.setColor(Color.BLACK);
+        g.fillRoundRect(x, y, 300, 5 * gp.tileSize + 50, 10, 10);
+
+        g.setColor(Color.WHITE);
+        g.setFont(workingFont.deriveFont(Font.PLAIN, 28F));
+        drawCentralizedString("Lvl Up", y + 30, g);
+
+        for (int i = 0; i < lvlUpButtons.length; i++){
+
+            g.drawString(lvlUpButtons[i], x + 30, lvlUpY[i]);
+
+        }
+
+        g.drawString("Skill Points: " + gp.player.skillPoints, x + 30, y + 270);
+
+        drawLvlParams(g);
+        drawMenuMarker(g);
+
+
+        y = gp.screenHeight/2 + gp.tileSize + 60;
+
+        g.setColor(Color.BLACK);
+        g.fillRoundRect(x, y, 300, gp.tileSize, 10, 10);
+
+        g.setColor(Color.WHITE);
+        g.setStroke(new BasicStroke(4));
+        g.drawRoundRect(x, y, 300, gp.tileSize, 10, 10);
+
+        g.setFont(workingFont.deriveFont(Font.PLAIN, 26F));
+        g.drawString(lvlUpCostsDisplay[menuIndex], x + 10, y + gp.tileSize - 15);
+
+    }
+
+    private void drawLvlParams(Graphics2D g){
+
+        g.setColor(Color.WHITE);
+        g.setFont(g.getFont().deriveFont(Font.PLAIN, 28F));
+
+        String text = String.valueOf(gp.player.strength);
+        int y = gp.screenHeight/2 - 4 * gp.tileSize + 90;
+        int x = gp.screenWidth/2 + 140 - (int)g.getFontMetrics().getStringBounds(text, g).getWidth();
+        g.drawString(text, x, y);
+
+        text = String.valueOf(gp.player.vitality);
+        y += 30;
+        x = gp.screenWidth/2 + 140 - (int)g.getFontMetrics().getStringBounds(text, g).getWidth();
+        g.drawString(text, x, y);
+
+        text = String.valueOf(gp.player.defence);
+        y += 30;
+        x = gp.screenWidth/2 + 140 - (int)g.getFontMetrics().getStringBounds(text, g).getWidth();
+        g.drawString(text, x, y);
+
+        text = String.valueOf(gp.player.spellPower);
+        y += 30;
+        x = gp.screenWidth/2 + 140 - (int)g.getFontMetrics().getStringBounds(text, g).getWidth();
+        g.drawString(text, x, y);
+
+        text = String.valueOf(gp.player.sorcery);
+        y += 30;
+        x = gp.screenWidth/2 + 140 - (int)g.getFontMetrics().getStringBounds(text, g).getWidth();
+        g.drawString(text, x, y);
+
+    }
+
     private void drawGameOverScreen(Graphics2D g) {
 
         g.setColor(new Color(0, 0, 0, 100));
@@ -391,10 +632,74 @@ public class UI {
 
             case SETTINGS -> {
 
-                text = settingsButtons[menuIndex];
                 y = settingsY[menuIndex];
                 x = gp.screenWidth/2 - 140;
                 g.drawString(">", x, y);
+
+            }
+
+            case LVL_UP -> {
+
+                y = lvlUpY[menuIndex];
+                x = gp.screenWidth/2 - 140;
+                g.drawString(">", x, y);
+
+            }
+
+        }
+
+    }
+
+    public void lvlUpAction(){
+
+        switch (menuIndex) {
+
+            case 0 -> {
+
+                if (gp.player.skillPoints >= lvlUpCosts[menuIndex]) {
+                    gp.player.skillPoints -= lvlUpCosts[menuIndex];
+                    gp.player.strength++;
+                    gp.player.setAttack();
+                }
+
+            }
+
+            case 1 -> {
+
+                if (gp.player.skillPoints >= lvlUpCosts[menuIndex]) {
+                    gp.player.skillPoints -= lvlUpCosts[menuIndex];
+                    gp.player.vitality++;
+                    gp.player.setHP();
+                }
+
+            }
+
+            case 2 -> {
+
+                if (gp.player.skillPoints >= lvlUpCosts[menuIndex]) {
+                    gp.player.skillPoints -= lvlUpCosts[menuIndex];
+                    gp.player.defence++;
+                    gp.player.setDefence();
+                }
+
+            }
+
+            case 3 -> {
+
+                if (gp.player.skillPoints >= lvlUpCosts[menuIndex]) {
+                    gp.player.skillPoints -= lvlUpCosts[menuIndex];
+                    gp.player.spellPower++;
+                }
+
+            }
+
+            case 4 -> {
+
+                if (gp.player.skillPoints >= lvlUpCosts[menuIndex]) {
+                    gp.player.skillPoints -= lvlUpCosts[menuIndex];
+                    gp.player.sorcery++;
+                    gp.player.setMP();
+                }
 
             }
 
@@ -416,7 +721,10 @@ public class UI {
 
             case 1 ->{
 
-                // Load Game
+                gp.sls.load();
+                gp.gameState = GamePanel.GameState.GAME;
+                gp.stopTrack();
+                gp.playTrack(6);
 
             }
 
@@ -444,12 +752,14 @@ public class UI {
 
             case 1 -> {
 
-                // Save Game
+                gp.sls.save();
+                gp.gameState = GamePanel.GameState.GAME;
             }
 
             case 2 -> {
 
-                // Load Game
+                gp.sls.load();
+                gp.gameState = GamePanel.GameState.GAME;
             }
 
             case 3 -> {
@@ -475,15 +785,16 @@ public class UI {
 
             case 0 -> {
 
-                gp.gameState = GamePanel.GameState.GAME;
                 gp.reset();
+                gp.gameState = GamePanel.GameState.GAME;
 //                gp.playTrack(6);
 
             }
 
             case 1 ->{
 
-                // Load Game
+                gp.sls.load();
+                gp.gameState = GamePanel.GameState.GAME;
 
             }
 

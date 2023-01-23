@@ -42,14 +42,7 @@ public class KeyL implements KeyListener {
                     gp.gameState = GamePanel.GameState.PAUSE;
                 }
 
-                if (code == KeyEvent.VK_MINUS){
-                    gp.player.decreaseHP(1);
-                }
-
-                if (code == KeyEvent.VK_EQUALS){
-                    gp.player.increaseHP(1);
-                }
-
+                // Moving part
                 if (code == KeyEvent.VK_W){
                     pressedUp = true;
                 }
@@ -66,6 +59,7 @@ public class KeyL implements KeyListener {
                     pressedRight = true;
                 }
 
+                // Dialog
                 if (code == KeyEvent.VK_E){
 
                     NPC npcNear = gp.player.npcCollisionCheck(gp.NPCList);
@@ -76,8 +70,12 @@ public class KeyL implements KeyListener {
 
                 }
 
+                // Game menus
                 if (code == KeyEvent.VK_C){
                     gp.gameState = GamePanel.GameState.INVENTORY;
+                }
+                if (code == KeyEvent.VK_B){
+                    gp.gameState = GamePanel.GameState.LVL_UP;
                 }
 
             }
@@ -91,6 +89,47 @@ public class KeyL implements KeyListener {
                 if (code == KeyEvent.VK_E){
                     NPC npcNear = gp.player.npcCollisionCheck(gp.NPCList);
                     npcNear.speak();
+                }
+
+            }
+
+            case TRADE -> {
+
+                if (code == KeyEvent.VK_ESCAPE){
+                    gp.gameState = GamePanel.GameState.GAME;
+                }
+
+                if (code == KeyEvent.VK_W){
+                    if (gp.ui.tradeIndex >= 8) {
+                        gp.ui.tradeIndex -= 8;
+                    }
+                }
+
+                if (code == KeyEvent.VK_S){
+                    if (gp.ui.tradeIndex <= 39) {
+                        gp.ui.tradeIndex += 8;
+                    }
+                }
+
+                if (code == KeyEvent.VK_A){
+                    if (gp.ui.tradeIndex > 0) {
+                        gp.ui.tradeIndex--;
+                    }
+                }
+
+                if (code == KeyEvent.VK_D){
+
+                    if (gp.ui.tradeIndex < 47) {
+                        gp.ui.tradeIndex++;
+                    }
+                }
+
+                if (code == KeyEvent.VK_ENTER){
+
+                    if (gp.ui.tradeIndex < gp.ui.currentMerchant.inventory.size()) {
+                        gp.ui.currentMerchant.buy(gp.ui.tradeIndex);
+                    }
+
                 }
 
             }
@@ -203,7 +242,7 @@ public class KeyL implements KeyListener {
                         gp.music.volumeScale++;
                         gp.music.getVolume();
                     }
-                    if (gp.ui.menuIndex == 2 && gp.music.volumeScale < 4) {
+                    if (gp.ui.menuIndex == 2 && gp.se.volumeScale < 4) {
                         gp.se.volumeScale++;
                     }
 
@@ -215,7 +254,7 @@ public class KeyL implements KeyListener {
                         gp.music.volumeScale--;
                         gp.music.getVolume();
                     }
-                    if (gp.ui.menuIndex == 2 && gp.music.volumeScale > 0) {
+                    if (gp.ui.menuIndex == 2 && gp.se.volumeScale > 0) {
                         gp.se.volumeScale--;
                     }
 
@@ -230,19 +269,61 @@ public class KeyL implements KeyListener {
                 }
 
                 if (code == KeyEvent.VK_W){
-                    pressedUp = true;
+                    if (gp.ui.inventoryIndex >= 8) {
+                        gp.ui.inventoryIndex -= 8;
+                    }
                 }
 
                 if (code == KeyEvent.VK_S){
-                    pressedDown = true;
+                    if (gp.ui.inventoryIndex <= 39) {
+                        gp.ui.inventoryIndex += 8;
+                    }
                 }
 
                 if (code == KeyEvent.VK_A){
-                    pressedLeft = true;
+                    if (gp.ui.inventoryIndex > 0) {
+                        gp.ui.inventoryIndex--;
+                    }
                 }
 
                 if (code == KeyEvent.VK_D){
-                    pressedRight = true;
+
+                    if (gp.ui.inventoryIndex < 47) {
+                        gp.ui.inventoryIndex++;
+                    }
+
+                }
+
+                if (code == KeyEvent.VK_ENTER){
+
+                    gp.ui.useItem();
+
+                }
+
+            }
+
+            case LVL_UP -> {
+
+                if (code == KeyEvent.VK_B || code == KeyEvent.VK_ESCAPE){
+                    gp.gameState = GamePanel.GameState.GAME;
+                }
+
+                if (code == KeyEvent.VK_W){
+                    gp.ui.menuIndex --;
+                    if (gp.ui.menuIndex < 0){
+                        gp.ui.menuIndex = 4;
+                    }
+                }
+
+                if (code == KeyEvent.VK_S){
+                    gp.ui.menuIndex ++;
+                    if (gp.ui.menuIndex > 4){
+                        gp.ui.menuIndex = 0;
+                    }
+                }
+
+                if (code == KeyEvent.VK_ENTER) {
+                    gp.ui.lvlUpAction();
                 }
 
             }
@@ -258,7 +339,7 @@ public class KeyL implements KeyListener {
 
         switch (gp.gameState){
 
-            case GAME, INVENTORY -> {
+            case GAME -> {
 
                 if (code == KeyEvent.VK_W){
                     pressedUp = false;
