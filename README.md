@@ -1,2 +1,3 @@
-# ZPOiF_project_Grinchik
-2D RPG Game
+# 2D RPG Game
+
+It is my educational project for university
